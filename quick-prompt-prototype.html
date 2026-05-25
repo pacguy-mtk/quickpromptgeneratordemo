@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quick Prompt Generator Prototype</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111318;
+      --panel: #181c24;
+      --panel-2: #202632;
+      --text: #eef2f8;
+      --muted: #9aa7b8;
+      --line: #303847;
+      --accent: #6cc7ff;
+      --accent-2: #a7f3d0;
+      --danger: #ffb4b4;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(108, 199, 255, 0.14), transparent 34rem),
+        linear-gradient(180deg, #10131a 0%, #151922 100%);
+      color: var(--text);
+    }
+
+    main {
+      width: min(1040px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 44px 0;
+    }
+
+    .header {
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      color: var(--accent-2);
+      font-size: 13px;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      margin: 0 0 10px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(30px, 4vw, 48px);
+      letter-spacing: 0;
+      line-height: 1.05;
+    }
+
+    .intro {
+      max-width: 680px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: rgba(24, 28, 36, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel-2);
+      color: var(--text);
+      font: inherit;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 142px;
+      resize: vertical;
+      padding: 12px;
+      line-height: 1.5;
+    }
+
+    select {
+      padding: 11px 12px;
+      margin-bottom: 16px;
+    }
+
+    textarea:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108, 199, 255, 0.13);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 11px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #071016;
+      background: var(--accent);
+    }
+
+    button.secondary {
+      color: var(--text);
+      background: #2b3342;
+    }
+
+    .output {
+      min-height: 330px;
+      white-space: pre-wrap;
+      line-height: 1.55;
+      color: #e9eef7;
+      background: #10141d;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 14px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 12px 0 0;
+    }
+
+    .error {
+      color: var(--danger);
+    }
+
+    @media (max-width: 760px) {
+      main {
+        width: min(100% - 24px, 1040px);
+        padding: 28px 0;
+      }
+
+      .app,
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="header">
+      <p class="eyebrow">Static HTML prototype</p>
+      <h1>Quick Prompt Generator</h1>
+      <p class="intro">A no-API prototype that turns rough keywords into a cleaner starter prompt. This version uses simple templates first, so the logic is easy to understand before adding AI later.</p>
+    </section>
+
+    <section class="app" aria-label="Quick Prompt Generator">
+      <div class="panel">
+        <label for="idea">Rough idea or keywords</label>
+        <textarea id="idea" placeholder="cute kitten floral background"></textarea>
+
+        <div class="row">
+          <div>
+            <label for="mode">Prompt type</label>
+            <select id="mode">
+              <option value="auto">Auto detect</option>
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+              <option value="music">Music</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="style">Style direction</label>
+            <select id="style">
+              <option value="photorealistic">Photorealistic</option>
+              <option value="illustration">2D Illustration</option>
+              <option value="3dcg">3DCG</option>
+              <option value="others">Others</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="generate">Generate Prompt</button>
+          <button class="secondary" id="copy">Copy</button>
+          <button class="secondary" id="clear">Clear</button>
+        </div>
+
+        <p class="hint">This is only a frontend prototype. It does not call Gemini, ChatGPT, or any API yet.</p>
+      </div>
+
+      <div class="panel">
+        <label for="output">Generated starter prompt</label>
+        <div class="output" id="output" aria-live="polite">Prompt will appear here.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const ideaInput = document.querySelector("#idea");
+    const modeInput = document.querySelector("#mode");
+    const styleInput = document.querySelector("#style");
+    const output = document.querySelector("#output");
+    const generateButton = document.querySelector("#generate");
+    const copyButton = document.querySelector("#copy");
+    const clearButton = document.querySelector("#clear");
+
+    const styleMap = {
+      photorealistic: "photorealistic detail, natural materials, believable lighting, realistic camera depth, and grounded atmosphere",
+      illustration: "2D illustration style, clean shape language, expressive color, intentional linework, and polished drawn composition",
+      "3dcg": "high-quality 3DCG style, detailed materials, soft global illumination, clean geometry, and cinematic render finish",
+      others: "a clear custom visual style, balanced composition, readable focal point, consistent lighting, and polished finish"
+    };
+
+    const musicStyleMap = {
+      photorealistic: "organic cinematic sound, natural instrumental textures, grounded atmosphere, and clean production",
+      illustration: "playful melodic color, light rhythmic movement, expressive textures, and bright creative energy",
+      "3dcg": "modern cinematic electronic sound, polished synth layers, clean percussion, and futuristic texture",
+      others: "a flexible custom sound, clear mood direction, balanced energy, and polished production"
+    };
+
+    function detectMode(text) {
+      const lower = text.toLowerCase();
+      if (/(music|soundtrack|audio|song|score|melody|bgm|showreel music)/.test(lower)) return "music";
+      if (/(video|animation|clip|motion|cinematic|reel|short film|camera|walking|launch|firing)/.test(lower)) return "video";
+      return "image";
+    }
+
+    function cleanIdea(text) {
+      return text.trim().replace(/\s+/g, " ");
+    }
+
+    function makeImagePrompt(idea, styleText) {
+      return `Prompt: A polished image based on this idea: ${idea}. Build a clear subject and setting from the keywords, with ${styleText}. Use a strong composition, readable foreground and background separation, attractive lighting, and a clean visual mood. Add small supporting details that make the scene feel complete without overcrowding it. Avoid text, watermark, distorted anatomy, cluttered composition, low-resolution texture, and inconsistent lighting.`;
+    }
+
+    function makeVideoPrompt(idea, styleText) {
+      return `Prompt: A short 6-8 second video based on this idea: ${idea}. Start with a clear establishing view, then show one simple readable action that develops naturally and ends on a clean final beat. Use steady cinematic camera movement, ${styleText}, believable motion, and consistent subject design throughout the clip. Avoid sudden cuts, flicker, random extra objects, distorted anatomy, inconsistent lighting, and overcomplicated action.`;
+    }
+
+    function makeMusicPrompt(idea, styleText) {
+      return `Prompt: Create a 30-second music track based on this mood or idea: ${idea}. Use a clean modern sound with ${styleText}. Build from a simple opening into a steady middle section, then end with a polished resolved finish. Keep the track useful as background music and easy to edit with visuals. Avoid vocals, lyrics, harsh noise, chaotic transitions, horror mood, and overly dramatic trailer music.`;
+    }
+
+    function generatePrompt() {
+      const idea = cleanIdea(ideaInput.value);
+      const styleText = styleMap[styleInput.value];
+
+      if (!idea) {
+        output.innerHTML = '<span class="error">Type a rough idea first.</span>';
+        return;
+      }
+
+      const mode = modeInput.value === "auto" ? detectMode(idea) : modeInput.value;
+
+      if (mode === "music") {
+        output.textContent = makeMusicPrompt(idea, musicStyleMap[styleInput.value]);
+      } else if (mode === "video") {
+        output.textContent = makeVideoPrompt(idea, styleText);
+      } else {
+        output.textContent = makeImagePrompt(idea, styleText);
+      }
+    }
+
+    async function copyOutput() {
+      const text = output.textContent.trim();
+      if (!text || text === "Prompt will appear here." || text === "Type a rough idea first.") return;
+      await navigator.clipboard.writeText(text);
+      copyButton.textContent = "Copied";
+      setTimeout(() => {
+        copyButton.textContent = "Copy";
+      }, 1200);
+    }
+
+    generateButton.addEventListener("click", generatePrompt);
+    copyButton.addEventListener("click", copyOutput);
+    clearButton.addEventListener("click", () => {
+      ideaInput.value = "";
+      output.textContent = "Prompt will appear here.";
+    });
+
+    ideaInput.addEventListener("keydown", (event) => {
+      if (event.ctrlKey && event.key === "Enter") generatePrompt();
+    });
+  </script>
+</body>
+</html>
