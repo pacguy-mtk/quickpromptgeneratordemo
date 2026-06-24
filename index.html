@@ -88,7 +88,8 @@
     }
 
     textarea,
-    select {
+    select,
+    input {
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 6px;
@@ -105,13 +106,15 @@
       line-height: 1.5;
     }
 
-    select {
+    select,
+    input {
       padding: 11px 12px;
       margin-bottom: 16px;
     }
 
     textarea:focus,
-    select:focus {
+    select:focus,
+    input:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(108, 199, 255, 0.13);
     }
@@ -143,6 +146,11 @@
     button.secondary {
       color: var(--text);
       background: #2b3342;
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.75;
     }
 
     .output {
@@ -215,13 +223,17 @@
           </div>
         </div>
 
+        <label for="apiKey">Model API Key</label>
+        <input id="apiKey" type="password" placeholder="Paste your API key here" autocomplete="off" />
+
         <div class="actions">
           <button id="generate">Generate Prompt</button>
+          <button class="secondary" id="generate-ai">Generate with AI</button>
           <button class="secondary" id="copy">Copy</button>
           <button class="secondary" id="clear">Clear</button>
         </div>
 
-        <p class="hint">This is only a frontend prototype. It does not call Gemini, ChatGPT, or any API yet.</p>
+        <p class="hint">Generate Prompt uses the built-in template logic. Generate with AI sends your idea, type, and style to AI Model for a richer result.</p>
       </div>
 
       <div class="panel">
@@ -235,8 +247,10 @@
     const ideaInput = document.querySelector("#idea");
     const modeInput = document.querySelector("#mode");
     const styleInput = document.querySelector("#style");
+    const apiKeyInput = document.querySelector("#apiKey");
     const output = document.querySelector("#output");
     const generateButton = document.querySelector("#generate");
+    const generateAiButton = document.querySelector("#generate-ai");
     const copyButton = document.querySelector("#copy");
     const clearButton = document.querySelector("#clear");
 
@@ -265,6 +279,18 @@
       return text.trim().replace(/\s+/g, " ");
     }
 
+    function getResolvedMode(idea) {
+      return modeInput.value === "auto" ? detectMode(idea) : modeInput.value;
+    }
+
+    function getStyleText() {
+      return styleMap[styleInput.value];
+    }
+
+    function getMusicStyleText() {
+      return musicStyleMap[styleInput.value];
+    }
+
     function makeImagePrompt(idea, styleText) {
       return `Prompt: A polished image based on this idea: ${idea}. Build a clear subject and setting from the keywords, with ${styleText}. Use a strong composition, readable foreground and background separation, attractive lighting, and a clean visual mood. Add small supporting details that make the scene feel complete without overcrowding it. Avoid text, watermark, distorted anatomy, cluttered composition, low-resolution texture, and inconsistent lighting.`;
     }
@@ -279,21 +305,93 @@
 
     function generatePrompt() {
       const idea = cleanIdea(ideaInput.value);
-      const styleText = styleMap[styleInput.value];
+      const styleText = getStyleText();
 
       if (!idea) {
         output.innerHTML = '<span class="error">Type a rough idea first.</span>';
         return;
       }
 
-      const mode = modeInput.value === "auto" ? detectMode(idea) : modeInput.value;
+      const mode = getResolvedMode(idea);
 
       if (mode === "music") {
-        output.textContent = makeMusicPrompt(idea, musicStyleMap[styleInput.value]);
+        output.textContent = makeMusicPrompt(idea, getMusicStyleText());
       } else if (mode === "video") {
         output.textContent = makeVideoPrompt(idea, styleText);
       } else {
         output.textContent = makeImagePrompt(idea, styleText);
+      }
+    }
+
+    function buildAiPrompt(idea, mode, style) {
+      return [
+        "Turn the user's rough input into a polished prompt.",
+        "Return only the final prompt text with no explanation, no markdown, and no prefacing labels unless they are part of the prompt itself.",
+        `Idea: ${idea}`,
+        `Type preference: ${mode === "auto" ? "auto-detect from the idea" : mode}`,
+        `Style direction: ${style}`,
+        "Write one clean, ready-to-use prompt that is specific, concise, and practical."
+      ].join("\n");
+    }
+
+    async function generateWithAI() {
+      const idea = cleanIdea(ideaInput.value);
+      const apiKey = apiKeyInput.value.trim();
+      const mode = getResolvedMode(idea || "");
+      const style = styleInput.value;
+
+      if (!apiKey) {
+        output.innerHTML = '<span class="error">Paste your API key first.</span>';
+        return;
+      }
+
+      if (!idea) {
+        output.innerHTML = '<span class="error">Type a rough idea first.</span>';
+        return;
+      }
+
+      const systemPrompt = "You are a helpful prompt engineer who transforms rough user ideas into concise, high-quality prompts.";
+      const userPrompt = buildAiPrompt(idea, mode, style);
+
+      generateAiButton.disabled = true;
+      const originalLabel = generateAiButton.textContent;
+      generateAiButton.textContent = "Generating...";
+      output.textContent = "Generating with AI...";
+
+      try {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "cohere/north-mini-code:free",
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userPrompt }
+            ]
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          const message = data?.error?.message || response.statusText || "Request failed.";
+          throw new Error(message);
+        }
+
+        const aiText = data?.choices?.[0]?.message?.content?.trim();
+        if (!aiText) {
+          throw new Error("No AI response was returned.");
+        }
+
+        output.textContent = aiText;
+      } catch (error) {
+        output.innerHTML = `<span class="error">AI request failed: ${error.message}</span>`;
+      } finally {
+        generateAiButton.disabled = false;
+        generateAiButton.textContent = originalLabel;
       }
     }
 
@@ -308,6 +406,7 @@
     }
 
     generateButton.addEventListener("click", generatePrompt);
+    generateAiButton.addEventListener("click", generateWithAI);
     copyButton.addEventListener("click", copyOutput);
     clearButton.addEventListener("click", () => {
       ideaInput.value = "";
