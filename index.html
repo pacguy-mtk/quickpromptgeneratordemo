@@ -193,7 +193,7 @@
     <section class="header">
       <p class="eyebrow">Static HTML prototype</p>
       <h1>Quick Prompt Generator</h1>
-      <p class="intro">A no-API prototype that turns rough keywords into a cleaner starter prompt. This version uses simple templates first, so the logic is easy to understand before adding AI later.</p>
+      <p class="intro">An API prototype that turns rough keywords into a cleaner starter prompt. This version uses simple templates first, but you may insert a specific API key. Contact Zijun or via Freeform on how-to.</p>
     </section>
 
     <section class="app" aria-label="Quick Prompt Generator">
@@ -224,7 +224,7 @@
         </div>
 
         <label for="apiKey">Model API Key</label>
-        <input id="apiKey" type="password" placeholder="Paste your API key here" autocomplete="off" />
+        <input id="apiKey" type="password" placeholder="DO NOT insert API key, only read specific API key!" autocomplete="off" />
 
         <div class="actions">
           <button id="generate">Generate Prompt</button>
@@ -233,12 +233,13 @@
           <button class="secondary" id="clear">Clear</button>
         </div>
 
-        <p class="hint">Generate Prompt uses the built-in template logic. Generate with AI sends your idea, type, and style to AI Model for a richer result.</p>
+        <p class="hint">
+            Generate Prompt uses the built-in template logic. Generate with AI sends your idea, type, and style to AI Model for a richer result.</p>
       </div>
 
       <div class="panel">
         <label for="output">Generated starter prompt</label>
-        <div class="output" id="output" aria-live="polite">Prompt will appear here.</div>
+        <div class="output" id="output" aria-live="polite"> Prompt will appear here.</div>
       </div>
     </section>
   </main>
